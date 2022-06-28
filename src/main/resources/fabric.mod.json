@@ -1,29 +1,29 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "sds",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Survival Debug Stick Mod",
+  "description": "This mod provides survival players with ability to create and use debug stick from creative inventory",
   "authors": [
-    "Me!"
+    "Just_S"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "YouTube": "https://www.youtube.com/c/JustS_js",
+    "sources": "https://github.com/JustS-js/debugStickSurvival"
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "icon": "assets/sds/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.fabricmc.example.ExampleMod"
+      "net.just_s.sds.SDSMod"
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "sds.mixins.json"
   ],
 
   "depends": {
