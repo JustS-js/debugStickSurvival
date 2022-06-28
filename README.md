@@ -4,6 +4,8 @@
 
 This mod is server-side so feel free to use it on "vanill-ish" servers. No need to install it on client.
 
+Don't forget to install Fabric API
+
 For more info check [wiki](https://github.com/JustS-js/debugStickSurvival/wiki)
 
 ## License
