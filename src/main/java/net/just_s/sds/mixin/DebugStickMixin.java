@@ -1,7 +1,6 @@
 package net.just_s.sds.mixin;
 
 import net.just_s.sds.Config;
-import net.just_s.sds.SDSMod;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -45,7 +44,7 @@ public class DebugStickMixin {
         StateManager<Block, BlockState> stateManager = block.getStateManager();
         Collection<Property<?>> collection = stateManager.getProperties();
 
-        if (!isBlockModifiable(state.getBlock()) || collection.isEmpty()) {
+        if (!isBlockAllowedToModify(state.getBlock()) || collection.isEmpty()) {
             sendMessage(player, Text.of(Config.MESSAGE_nomodify));
             cir.setReturnValue(false);
             return;
@@ -63,7 +62,6 @@ public class DebugStickMixin {
             // select next property
             property = getNextProperty(collection, property, block);
             nbtCompound.putString(blockName, property.getName());
-            SDSMod.LOGGER.warn(nbtCompound.toString());
 
             sendMessage(player, Text.of(
                             String.format(
@@ -76,7 +74,7 @@ public class DebugStickMixin {
         } else {
             // change value of property
             if (property == null) {
-                property = getNextProperty(collection, null, null);
+                property = getNextProperty(collection, null, block);
             }
 
             BlockState blockState = cycle(state, property, false);
@@ -105,8 +103,8 @@ public class DebugStickMixin {
     /**
      * Check via config if chosen block is able to be modified in survival
      * */
-    private boolean isBlockModifiable(Block block) {
-        return Config.whitelist == Config.isInList(block);
+    private boolean isBlockAllowedToModify(Block block) {
+        return Config.isBlockAllowed(block);
     }
 
     /**

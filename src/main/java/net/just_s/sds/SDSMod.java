@@ -9,6 +9,7 @@ public class SDSMod implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		Config.load();
 		LOGGER.info("SDS initialized successfully!");
 	}
 }
