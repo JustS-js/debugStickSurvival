@@ -38,18 +38,24 @@ public class DebugStickMixin {
 
     @Inject(at = @At("HEAD"), method = "use", cancellable = true)
     private void onUSE(PlayerEntity player, BlockState state, WorldAccess world, BlockPos pos, boolean update, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+        // if player is not in Survival or Hardcore mode, the mod should not interfere
         if (player.isCreativeLevelTwoOp()) {return;}
 
         Block block = state.getBlock();
         StateManager<Block, BlockState> stateManager = block.getStateManager();
         Collection<Property<?>> collection = stateManager.getProperties();
 
+        // check if block is modifiable by the config
         if (!isBlockAllowedToModify(state.getBlock()) || collection.isEmpty()) {
             sendMessage(player, Text.of(Config.MESSAGE_nomodify));
             cir.setReturnValue(false);
             return;
         }
 
+        // https://minecraft.fandom.com/wiki/Debug_Stick#Item_data
+        // to remember the data of which property for which block is chosen,
+        // Minecraft Devs decided to use NBT data for Debug Stick.
+        // Who am I to disagree?
         NbtCompound nbtCompound = stack.getOrCreateSubNbt("DebugProperty");
 
         String blockName = Registry.BLOCK.getId(block).toString();
@@ -57,12 +63,13 @@ public class DebugStickMixin {
 
         Property<?> property = stateManager.getProperty(propertyName);
 
-
         if (player.isSneaking()) {
             // select next property
             property = getNextProperty(collection, property, block);
+            // save chosen property in the NBT data of Debug Stick
             nbtCompound.putString(blockName, property.getName());
 
+            // send the player a message of successful selecting
             sendMessage(player, Text.of(
                             String.format(
                                 Config.MESSAGE_select,
@@ -77,13 +84,16 @@ public class DebugStickMixin {
                 property = getNextProperty(collection, null, block);
             }
 
-            BlockState blockState = cycle(state, property, false);
-            world.setBlockState(pos, blockState, 18);
+            // generate new state of chosen block with modified property
+            BlockState newState = cycle(state, property, false);
+            // update chosen block with its new state
+            world.setBlockState(pos, newState, 18);
+            // send the player a message of successful modifying
             sendMessage(player, Text.of(
                             String.format(
                                 Config.MESSAGE_change,
                                 property.getName(),
-                                getValueString(state, property)
+                                getValueString(newState, property)
                             )
                     )
             );
@@ -91,9 +101,12 @@ public class DebugStickMixin {
         cir.setReturnValue(true);
     }
 
+    /**
+     * Choose next property that is appropriate for the configuration file
+     * */
     private Property<?> getNextProperty(Collection<Property<?>> collection, @Nullable Property<?> property, @Nullable Block block) {
         int len = collection.size();
-        do {
+        do { // simply scrolling through the list of properties until suitable is found
             property = Util.next(collection, property);
             len--;
         } while (len > 0 && !isPropertyModifiable(property, block));

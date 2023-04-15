@@ -201,9 +201,12 @@ public class Config {
     private static void populate(HashMap<String, List<String>> map, JSONArray source) {
         for (JSONObject entry : (Iterable<JSONObject>) source) {
             String id = (String) entry.get("id");
+
+            // if user did not specify origin of block/item, we assume it is from vanilla Minecraft.
             if (!id.contains(":")) {
                 id = "minecraft:" + id;
             }
+
             List<String> list = new ArrayList<>();
             if (entry.containsKey("properties")) {
                 JSONArray props = (JSONArray) entry.get("properties");
