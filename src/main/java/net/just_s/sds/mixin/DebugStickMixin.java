@@ -12,7 +12,7 @@ import net.minecraft.state.property.Property;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registries;
 import net.minecraft.world.WorldAccess;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,7 +38,7 @@ public class DebugStickMixin {
 
     @Inject(at = @At("HEAD"), method = "use", cancellable = true)
     private void onUSE(PlayerEntity player, BlockState state, WorldAccess world, BlockPos pos, boolean update, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        // if player is not in Survival or Hardcore mode, the mod should not interfere
+        // if the player already does have the rights to use Debug Stick, the mod should not interfere
         if (player.isCreativeLevelTwoOp()) {return;}
 
         Block block = state.getBlock();
@@ -58,7 +58,7 @@ public class DebugStickMixin {
         // Who am I to disagree?
         NbtCompound nbtCompound = stack.getOrCreateSubNbt("DebugProperty");
 
-        String blockName = Registry.BLOCK.getId(block).toString();
+        String blockName = Registries.BLOCK.getId(block).toString();
         String propertyName = nbtCompound.getString(blockName);
 
         Property<?> property = stateManager.getProperty(propertyName);

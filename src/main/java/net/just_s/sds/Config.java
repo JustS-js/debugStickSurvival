@@ -1,13 +1,14 @@
 package net.just_s.sds;
 
 import net.minecraft.block.Block;
-import net.minecraft.tag.TagKey;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.tag.TagKey;
+import net.minecraft.registry.Registries;
 import org.jetbrains.annotations.Nullable;
 
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -191,7 +192,7 @@ public class Config {
         String prettyJsonString = gson.toJson(je);
 
         try {
-            FileWriter writer = new FileWriter(configFile);
+            FileWriter writer = new FileWriter(configFile, StandardCharsets.UTF_8);
             writer.write(prettyJsonString);
             writer.close();
             SDSMod.LOGGER.error("Saved new config file.");
@@ -220,7 +221,7 @@ public class Config {
 
     public static boolean isBlockAllowed(Block block) {
         // 1) check if block has been mentioned in BLOCKS part
-        String blockName = Registry.BLOCK.getId(block).toString();
+        String blockName = Registries.BLOCK.getId(block).toString();
 
         if (blocks_allowed.containsKey(blockName)) return true;
         if (blocks_forbidden.containsKey(blockName)) {
@@ -245,7 +246,7 @@ public class Config {
 
     public static boolean isPropertyAllowed(String propertyName, @Nullable Block block) {
         if (block != null) {
-            String blockName = Registry.BLOCK.getId(block).toString();
+            String blockName = Registries.BLOCK.getId(block).toString();
             // 1) Check for exactly this block
             if (blocks_forbidden.containsKey(blockName)) {
                 List<String> forbidden_props = blocks_forbidden.get(blockName);

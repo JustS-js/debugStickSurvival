@@ -6,8 +6,6 @@
   "mixins": [
     "DebugStickMixin"
   ],
-  "client": [
-  ],
   "injectors": {
     "defaultRequire": 1
   }
