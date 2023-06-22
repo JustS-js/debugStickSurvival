@@ -3,6 +3,7 @@ package net.just_s.sds;
 import net.minecraft.block.Block;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.registry.Registries;
+import net.minecraft.state.property.Property;
 import org.jetbrains.annotations.Nullable;
 
 import net.fabricmc.loader.api.FabricLoader;
@@ -247,7 +248,7 @@ public class Config {
                 return true;
         }
         
-        // 4) if block and its tags were not clarified in config, check whitelist mode
+        // 4) if block, its block-states and tags were not clarified in config, check whitelist mode
         return !whitelist;
     }
 
