@@ -240,7 +240,14 @@ public class Config {
                 return !tags_forbidden.get(tagName).isEmpty();
             }
         }
-        // 3) if block and its tags were not clarified in config, check whitelist mode
+        
+        // 3) if block has properties in allowed properties config
+        for (Property<?> property : block.getStateManager().getProperties()) {
+            if (properties.getOrDefault(property.getName(), false))
+                return true;
+        }
+        
+        // 4) if block and its tags were not clarified in config, check whitelist mode
         return !whitelist;
     }
 
