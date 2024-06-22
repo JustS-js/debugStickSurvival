@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Collection;
 
 @Mixin(DebugStickItem.class)
-public class DebugStickMixin extends Item {
+public abstract class DebugStickMixin extends Item {
     public DebugStickMixin(Settings settings) {
         super(settings);
     }
@@ -89,7 +89,7 @@ public class DebugStickMixin extends Item {
             }
 
             // generate new state of chosen block with modified property
-            BlockState newState = cycle(state, property, player.shouldCancelInteraction());
+            BlockState newState = getNextBlockState(state, property, player.shouldCancelInteraction());
             // update chosen block with its new state
             world.setBlockState(pos, newState, 18);
             // send the player a message of successful modifying
@@ -138,11 +138,37 @@ public class DebugStickMixin extends Item {
     }
 
     /**
+     * Choose next property that is appropriate for the configuration file
+     * */
+    @Unique
+    private <T extends Comparable<T>> BlockState getNextBlockState(BlockState state, Property<T> property, boolean inverse) {
+        int i = 0;
+        Collection<T> collection = property.getValues();
+        T value =  state.get(property);
+        do { // simply scrolling through the list of property values until suitable is found
+            value = cycle(collection, value, inverse);
+            i++;
+        } while (i < collection.size() && !isPropertyValueAllowed(state.getBlock(), property, value));
+        if (!isPropertyValueAllowed(state.getBlock(), property, value) && i == collection.size()) {
+            return state;
+        }
+        return state.with(property, value);
+    }
+
+    /**
      * Check via config if chosen block is able to be modified in survival
      * */
     @Unique
     private boolean isBlockAllowedToModify(Block block) {
         return Config.isBlockAllowed(block);
+    }
+
+    /**
+     * Check via config if chosen block state is allowed
+     * */
+    @Unique
+    private <T extends Comparable<T>> boolean isPropertyValueAllowed(Block block, Property<T> property, T value) {
+        return Config.isPropertyValueAllowed(block, property.getName(), value.toString());
     }
 
     /**

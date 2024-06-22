@@ -10,10 +10,7 @@ import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 import org.json.simple.JSONArray;
@@ -27,12 +24,13 @@ public class Config {
     private static final File configFile = FabricLoader.getInstance().getConfigDir().resolve("SDS.json").toFile();
 
     public static boolean whitelist;
-    private static HashMap<String, Boolean> properties = new HashMap<>();
+    private static HashMap<String, List<String>> properties_allowed = new HashMap<>();
+    private static HashMap<String, List<String>> properties_forbidden = new HashMap<>();
 
-    private static HashMap<String, List<String>> tags_allowed = new HashMap<>();
-    private static HashMap<String, List<String>> blocks_allowed = new HashMap<>();
-    private static HashMap<String, List<String>> tags_forbidden = new HashMap<>();
-    private static HashMap<String, List<String>> blocks_forbidden = new HashMap<>();
+    private static HashMap<String, HashMap<String, List<String>>> tags_allowed = new HashMap<>();
+    private static HashMap<String, HashMap<String, List<String>>> blocks_allowed = new HashMap<>();
+    private static HashMap<String, HashMap<String, List<String>>> tags_forbidden = new HashMap<>();
+    private static HashMap<String, HashMap<String, List<String>>> blocks_forbidden = new HashMap<>();
 
     public static void load() {
         JSONParser parser = new JSONParser();
@@ -43,20 +41,34 @@ public class Config {
             whitelist = (boolean) jfile.get("whitelist");
 
             JSONObject allowed = (JSONObject) jfile.get("allowed");
-            JSONArray properties_allowed = (JSONArray) allowed.get("properties");
             JSONArray tags_allowed_js = (JSONArray) allowed.get("tags");
             JSONArray blocks_allowed_js = (JSONArray) allowed.get("blocks");
 
+            Object ObjectProperties_allowed = allowed.get("properties");
+            JSONObject properties_allowed_js = (ObjectProperties_allowed instanceof JSONArray) ? parseOldArrayToObject((JSONArray) allowed.get("properties")) : (JSONObject) allowed.get("properties");
+
             JSONObject forbidden = (JSONObject) jfile.get("forbidden");
-            JSONArray properties_forbidden = (JSONArray) forbidden.get("properties");
             JSONArray tags_forbidden_js = (JSONArray) forbidden.get("tags");
             JSONArray blocks_forbidden_js = (JSONArray) forbidden.get("blocks");
 
-            for (String property : (Iterable<String>) properties_allowed) {
-                properties.put(property, true);
+            Object ObjectProperties_forbidden = forbidden.get("properties");
+            JSONObject properties_forbidden_js = (ObjectProperties_forbidden instanceof JSONArray) ? parseOldArrayToObject((JSONArray) forbidden.get("properties")) : (JSONObject) forbidden.get("properties");
+
+            for (Object property : properties_allowed_js.keySet()) {
+                JSONArray JSONPropertyValues = (JSONArray) properties_allowed_js.get(property);
+                List<String> propertyValues = new ArrayList<>();
+                for (Object value : JSONPropertyValues) {
+                    propertyValues.add(value.toString());
+                }
+                properties_allowed.put((String) property, propertyValues);
             }
-            for (String property : (Iterable<String>) properties_forbidden) {
-                properties.put(property, false);
+            for (Object property : properties_forbidden_js.keySet()) {
+                JSONArray JSONPropertyValues = (JSONArray) properties_forbidden_js.get(property);
+                List<String> propertyValues = new ArrayList<>();
+                for (Object value : JSONPropertyValues) {
+                    propertyValues.add(value.toString());
+                }
+                properties_forbidden.put((String) property, propertyValues);
             }
 
             populate(tags_allowed, tags_allowed_js);
@@ -72,7 +84,8 @@ public class Config {
 
     private static void factorySettings() {
         whitelist = false;
-        properties = new HashMap<>();
+        properties_allowed = new HashMap<>();
+        properties_forbidden = new HashMap<>();
         tags_allowed = new HashMap<>();
         tags_forbidden = new HashMap<>();
         blocks_allowed = new HashMap<>();
@@ -85,23 +98,17 @@ public class Config {
         jfile.put("whitelist", whitelist);
 
         JSONObject allowed = new JSONObject();
-        JSONArray properties_allowed = new JSONArray();
-        for (Map.Entry<String, Boolean> entry : properties.entrySet()) {
-            if (entry.getValue()) properties_allowed.add(entry.getKey());
-        }
-        allowed.put("properties", properties_allowed);
+        JSONObject properties_allowed_js = new JSONObject(properties_allowed);
+        allowed.put("properties", properties_allowed_js);
 
         JSONArray tags_allowed_js = new JSONArray();
-        for (Map.Entry<String, List<String>> entry : tags_allowed.entrySet()) {
+        for (Map.Entry<String, HashMap<String, List<String>>> entry : tags_allowed.entrySet()) {
             JSONObject tag = new JSONObject();
             tag.put("id", entry.getKey());
 
-            List<String> list = entry.getValue();
-            if (!list.isEmpty()) {
-                JSONArray props = new JSONArray();
-                for (String property : list) {
-                    props.add(property);
-                }
+            HashMap<String, List<String>> map = entry.getValue();
+            if (!map.isEmpty()) {
+                JSONObject props = new JSONObject(map);
                 tag.put("properties", props);
             }
             tags_allowed_js.add(tag);
@@ -109,16 +116,13 @@ public class Config {
         allowed.put("tags", tags_allowed_js);
 
         JSONArray blocks_allowed_js = new JSONArray();
-        for (Map.Entry<String, List<String>> entry : blocks_allowed.entrySet()) {
+        for (Map.Entry<String, HashMap<String, List<String>>> entry : blocks_allowed.entrySet()) {
             JSONObject block = new JSONObject();
             block.put("id", entry.getKey());
 
-            List<String> list = entry.getValue();
-            if (!list.isEmpty()) {
-                JSONArray props = new JSONArray();
-                for (String property : list) {
-                    props.add(property);
-                }
+            HashMap<String, List<String>> map = entry.getValue();
+            if (!map.isEmpty()) {
+                JSONObject props = new JSONObject(map);
                 block.put("properties", props);
             }
             blocks_allowed_js.add(block);
@@ -128,23 +132,17 @@ public class Config {
         jfile.put("allowed", allowed);
 
         JSONObject forbidden = new JSONObject();
-        JSONArray properties_forbidden = new JSONArray();
-        for (Map.Entry<String, Boolean> entry : properties.entrySet()) {
-            if (!entry.getValue()) properties_forbidden.add(entry.getKey());
-        }
-        forbidden.put("properties", properties_forbidden);
+        JSONObject properties_forbidden_js = new JSONObject(properties_forbidden);
+        forbidden.put("properties", properties_forbidden_js);
 
         JSONArray tags_forbidden_js = new JSONArray();
-        for (Map.Entry<String, List<String>> entry : tags_forbidden.entrySet()) {
+        for (Map.Entry<String, HashMap<String, List<String>>> entry : tags_forbidden.entrySet()) {
             JSONObject tag = new JSONObject();
             tag.put("id", entry.getKey());
 
-            List<String> list = entry.getValue();
-            if (!list.isEmpty()) {
-                JSONArray props = new JSONArray();
-                for (String property : list) {
-                    props.add(property);
-                }
+            HashMap<String, List<String>> map = entry.getValue();
+            if (!map.isEmpty()) {
+                JSONObject props = new JSONObject(map);
                 tag.put("properties", props);
             }
             tags_forbidden_js.add(tag);
@@ -152,16 +150,13 @@ public class Config {
         forbidden.put("tags", tags_forbidden_js);
 
         JSONArray blocks_forbidden_js = new JSONArray();
-        for (Map.Entry<String, List<String>> entry : blocks_forbidden.entrySet()) {
+        for (Map.Entry<String, HashMap<String, List<String>>> entry : blocks_forbidden.entrySet()) {
             JSONObject block = new JSONObject();
             block.put("id", entry.getKey());
 
-            List<String> list = entry.getValue();
-            if (!list.isEmpty()) {
-                JSONArray props = new JSONArray();
-                for (String property : list) {
-                    props.add(property);
-                }
+            HashMap<String, List<String>> map = entry.getValue();
+            if (!map.isEmpty()) {
+                JSONObject props = new JSONObject(map);
                 block.put("properties", props);
             }
             blocks_forbidden_js.add(block);
@@ -182,7 +177,7 @@ public class Config {
         } catch (IOException e) {SDSMod.LOGGER.error("Error while saving:" + e.getMessage());}
     }
 
-    private static void populate(HashMap<String, List<String>> map, JSONArray source) {
+    private static void populate(HashMap<String, HashMap<String, List<String>>> map, JSONArray source) {
         for (JSONObject entry : (Iterable<JSONObject>) source) {
             String id = (String) entry.get("id");
 
@@ -191,15 +186,33 @@ public class Config {
                 id = "minecraft:" + id;
             }
 
-            List<String> list = new ArrayList<>();
+            HashMap<String, List<String>> propertyEntries = new HashMap<>();
             if (entry.containsKey("properties")) {
-                JSONArray props = (JSONArray) entry.get("properties");
-                for (String property : (Iterable<String>) props) {
-                    list.add(property);
+                Object ObjectProperties = entry.get("properties");
+                JSONObject JSONProperties = (ObjectProperties instanceof JSONArray) ? parseOldArrayToObject((JSONArray) entry.get("properties")) : (JSONObject) entry.get("properties");
+                for (Object propertyName : JSONProperties.keySet()) {
+                    JSONArray JSONPropertyValues = (JSONArray) JSONProperties.get(propertyName);
+                    List<String> propertyValues = new ArrayList<>();
+                    for (Object value : JSONPropertyValues) {
+                        propertyValues.add(value.toString());
+                    }
+                    propertyEntries.put((String) propertyName, propertyValues);
                 }
             }
-            map.put(id, list);
+            map.put(id, propertyEntries);
         }
+    }
+
+    private static JSONObject parseOldArrayToObject(JSONArray oldArray) {
+        JSONObject jsonObject = new JSONObject();
+
+        for (String propertyName : (Iterable<? extends String>) oldArray) {
+            JSONArray jsonArray = new JSONArray();
+            jsonArray.add("all");
+            jsonObject.put(propertyName, jsonArray);
+        }
+
+        return jsonObject;
     }
 
     public static boolean isBlockAllowed(Block block) {
@@ -226,7 +239,7 @@ public class Config {
         
         // 3) if block has properties in allowed properties config
         for (Property<?> property : block.getStateManager().getProperties()) {
-            if (properties.getOrDefault(property.getName(), false))
+            if (properties_allowed.containsKey(property.getName()))
                 return true;
         }
         
@@ -239,42 +252,101 @@ public class Config {
             String blockName = Registries.BLOCK.getId(block).toString();
             // 1) Check for exactly this block
             if (blocks_forbidden.containsKey(blockName)) {
-                List<String> forbidden_props = blocks_forbidden.get(blockName);
-                if (forbidden_props.contains(propertyName)) return false;
+                HashMap<String, List<String>> forbidden_props = blocks_forbidden.get(blockName);
+                if (forbidden_props.containsKey("all") ||
+                    forbidden_props.getOrDefault(propertyName, new ArrayList<>()).contains("all")) return false;
             }
             if (blocks_allowed.containsKey(blockName)) {
-                List<String> allowed_props = blocks_allowed.get(blockName);
-                if (allowed_props.contains(propertyName)) return true;
+                HashMap<String, List<String>> allowed_props = blocks_allowed.get(blockName);
+                if (allowed_props.containsKey("all") || allowed_props.containsKey(propertyName)) return true;
                 if (allowed_props.isEmpty()) {
-                    if (properties.containsKey(propertyName)) return properties.get(propertyName);
-                    return true;
+                    return !properties_forbidden.getOrDefault(propertyName, new ArrayList<>()).contains("all");
                 }
             }
             // 2) Either block is not stated in config or
-            // allowed by itself, but does not speak about property. Check its tags
+            // allowed by itself, but does not speak about this property. Check its tags
             Stream<TagKey<Block>> tagStream = block.getRegistryEntry().streamTags();
             List<TagKey<Block>> tagArray = tagStream.toList();
             for (TagKey<Block> tag : tagArray) {
                 String tagName = tag.id().toString();
                 if (tags_forbidden.containsKey(tagName)) {
-                    List<String> forbidden_props = tags_forbidden.get(tagName);
-                    if (forbidden_props.contains(propertyName)) return false;
+                    HashMap<String, List<String>> forbidden_props = tags_forbidden.get(tagName);
+                    if (forbidden_props.containsKey("all") ||
+                        forbidden_props.getOrDefault(propertyName, new ArrayList<>()).contains("all")) return false;
                 }
             }
             for (TagKey<Block> tag : tagArray) {
                 String tagName = tag.id().toString();
                 if (tags_allowed.containsKey(tagName)) {
-                    List<String> allowed_props = tags_allowed.get(tagName);
-                    if (allowed_props.contains(propertyName)) return true;
+                    HashMap<String, List<String>> allowed_props = tags_allowed.get(tagName);
+                    if (allowed_props.containsKey("all") || allowed_props.containsKey(propertyName)) return true;
                     if (allowed_props.isEmpty()) {
-                        if (properties.containsKey(propertyName)) return properties.get(propertyName);
-                        return true;
+                        return !properties_forbidden.getOrDefault(propertyName, new ArrayList<>()).contains("all");
                     }
                 }
             }
         }
         // 3) If tags do not speak about property, check global list
-        if (properties.containsKey(propertyName)) return properties.get(propertyName);
+        if (properties_allowed.containsKey("all") || properties_allowed.containsKey(propertyName)) return true;
+        if (properties_forbidden.containsKey(propertyName)) return !properties_forbidden.get(propertyName).contains("all");
+        // 4) if property was not clarified in config, check whitelist mode
+        return !whitelist;
+    }
+
+    public static boolean isPropertyValueAllowed(Block block, String propertyName, String value) {
+        String blockName = Registries.BLOCK.getId(block).toString();
+        // 1) Check for exactly this block
+        if (blocks_forbidden.containsKey(blockName)) {
+            HashMap<String, List<String>> forbidden_props = blocks_forbidden.get(blockName);
+            if (forbidden_props.containsKey("all")) return false;
+            List<String> values = forbidden_props.getOrDefault(propertyName, new ArrayList<>());
+            if (values.contains("all") || values.contains(value)) return false;
+        }
+        if (blocks_allowed.containsKey(blockName)) {
+            HashMap<String, List<String>> allowed_props = blocks_allowed.get(blockName);
+            if (allowed_props.containsKey("all")) return true;
+            List<String> values = allowed_props.getOrDefault(propertyName, new ArrayList<>());
+            if (values.contains("all") || values.contains(value)) return true;
+            if (allowed_props.isEmpty()) {
+                return !properties_forbidden.getOrDefault(propertyName, new ArrayList<>()).contains("all");
+            }
+        }
+        // 2) Either block is not stated in config or
+        // allowed by itself, but does not speak about this property. Check its tags
+        Stream<TagKey<Block>> tagStream = block.getRegistryEntry().streamTags();
+        List<TagKey<Block>> tagArray = tagStream.toList();
+        for (TagKey<Block> tag : tagArray) {
+            String tagName = tag.id().toString();
+            if (tags_forbidden.containsKey(tagName)) {
+                HashMap<String, List<String>> forbidden_props = tags_forbidden.get(tagName);
+                if (forbidden_props.containsKey("all")) return false;
+                List<String> values = forbidden_props.getOrDefault(propertyName, new ArrayList<>());
+                if (values.contains("all") || values.contains(value)) return false;
+            }
+        }
+        for (TagKey<Block> tag : tagArray) {
+            String tagName = tag.id().toString();
+            if (tags_allowed.containsKey(tagName)) {
+                HashMap<String, List<String>> allowed_props = tags_allowed.get(tagName);
+                if (allowed_props.containsKey("all")) return true;
+                List<String> values = allowed_props.getOrDefault(propertyName, new ArrayList<>());
+                if (values.contains("all") || values.contains(value)) return true;
+                if (allowed_props.isEmpty()) {
+                    return !properties_forbidden.getOrDefault(propertyName, new ArrayList<>()).contains("all");
+                }
+            }
+        }
+        // 3) If tags do not speak about property, check global list
+        if (properties_allowed.containsKey("all")) return true;
+        if (properties_allowed.containsKey(propertyName)) {
+            List<String> values = properties_allowed.get(propertyName);
+            if (values.contains(value)) return true;
+        }
+        if (properties_forbidden.containsKey("all")) return false;
+        if (properties_forbidden.containsKey(propertyName)) {
+            List<String> values = properties_forbidden.get(propertyName);
+            if (values.contains(value)) return false;
+        }
         // 4) if property was not clarified in config, check whitelist mode
         return !whitelist;
     }
