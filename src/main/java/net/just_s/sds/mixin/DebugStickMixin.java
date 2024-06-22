@@ -7,6 +7,7 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DebugStickStateComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.DebugStickItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.state.StateManager;
@@ -24,7 +25,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Collection;
 
 @Mixin(DebugStickItem.class)
-public class DebugStickMixin {
+public class DebugStickMixin extends Item {
+    public DebugStickMixin(Settings settings) {
+        super(settings);
+    }
+
     @Shadow
     private static void sendMessage(PlayerEntity player, Text message) {}
 
@@ -52,8 +57,8 @@ public class DebugStickMixin {
         Collection<Property<?>> collection = stateManager.getProperties();
 
         // check if block is modifiable by the config
-        if (!isBlockAllowedToModify(state.getBlock()) || collection.isEmpty()) {
-            sendMessage(player, Text.of(Config.MESSAGE_nomodify));
+        if (!isBlockAllowedToModify(block) || collection.isEmpty()) {
+            sendMessage(player, Text.translatable(this.getTranslationKey() + ".empty", new Object[]{registryEntry.getIdAsString()}));
             cir.setReturnValue(false);
             return;
         }
@@ -70,22 +75,7 @@ public class DebugStickMixin {
 
         Property<?> property = stateComponent.properties().get(registryEntry);
 
-        if (player.isSneaking()) {
-            // select next property
-            property = getNextProperty(collection, property, block);
-            // save chosen property in the NBT data of Debug Stick
-            stack.set(DataComponentTypes.DEBUG_STICK_STATE, stateComponent.with(registryEntry, property));
-
-            // send the player a message of successful selecting
-            sendMessage(player, Text.of(
-                            String.format(
-                                Config.MESSAGE_select,
-                                property.getName(),
-                                getValueString(state, property)
-                            )
-                    )
-            );
-        } else {
+        if (update) {
             // change value of property
             if (property == null) {
                 property = getNextProperty(collection, null, block);
@@ -96,12 +86,25 @@ public class DebugStickMixin {
             // update chosen block with its new state
             world.setBlockState(pos, newState, 18);
             // send the player a message of successful modifying
-            sendMessage(player, Text.of(
-                            String.format(
-                                Config.MESSAGE_change,
-                                property.getName(),
-                                getValueString(newState, property)
-                            )
+            sendMessage(
+                    player,
+                    Text.translatable(
+                            this.getTranslationKey() + ".update",
+                            new Object[]{property.getName(), getValueString(newState, property)}
+                    )
+            );
+        } else {
+            // select next property
+            property = getNextProperty(collection, property, block);
+            // save chosen property in the NBT data of Debug Stick
+            stack.set(DataComponentTypes.DEBUG_STICK_STATE, stateComponent.with(registryEntry, property));
+
+            // send the player a message of successful selecting
+            sendMessage(
+                    player,
+                    Text.translatable(
+                            this.getTranslationKey() + ".select",
+                            new Object[]{property.getName(), getValueString(state, property)}
                     )
             );
         }

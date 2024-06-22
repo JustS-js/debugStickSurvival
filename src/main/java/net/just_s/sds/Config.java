@@ -26,10 +26,6 @@ import com.google.gson.*;
 public class Config {
     private static final File configFile = FabricLoader.getInstance().getConfigDir().resolve("SDS.json").toFile();
 
-    public static String MESSAGE_nomodify;
-    public static String MESSAGE_select;
-    public static String MESSAGE_change;
-
     public static boolean whitelist;
     private static HashMap<String, Boolean> properties = new HashMap<>();
 
@@ -45,11 +41,6 @@ public class Config {
             JSONObject jfile = (JSONObject) parser.parse(reader);
 
             whitelist = (boolean) jfile.get("whitelist");
-
-            JSONObject messages = (JSONObject) jfile.get("messages");
-            MESSAGE_nomodify = (String) messages.get("nomodify");
-            MESSAGE_select = (String) messages.get("select");
-            MESSAGE_change = (String) messages.get("change");
 
             JSONObject allowed = (JSONObject) jfile.get("allowed");
             JSONArray properties_allowed = (JSONArray) allowed.get("properties");
@@ -81,9 +72,6 @@ public class Config {
 
     private static void factorySettings() {
         whitelist = false;
-        MESSAGE_nomodify = "This block is not modifiable.";
-        MESSAGE_select = "Property «%s» was selected (%s).";
-        MESSAGE_change = "Property «%s» was modified (%s).";
         properties = new HashMap<>();
         tags_allowed = new HashMap<>();
         tags_forbidden = new HashMap<>();
@@ -95,12 +83,6 @@ public class Config {
     public static void save() {
         JSONObject jfile = new JSONObject();
         jfile.put("whitelist", whitelist);
-
-        JSONObject messages = new JSONObject();
-        messages.put("nomodify", MESSAGE_nomodify);
-        messages.put("select", MESSAGE_select);
-        messages.put("change", MESSAGE_change);
-        jfile.put("messages", messages);
 
         JSONObject allowed = new JSONObject();
         JSONArray properties_allowed = new JSONArray();
