@@ -79,7 +79,7 @@ public class DebugStickMixin extends Item {
         if (update) {
             // change value of property
             if (property == null) {
-                property = getNextProperty(collection, null, block);
+                property = getNextProperty(collection, null, block, player.shouldCancelInteraction());
             }
             // check if given property is allowed
             if (!isPropertyModifiable(property, block)) {
@@ -89,7 +89,7 @@ public class DebugStickMixin extends Item {
             }
 
             // generate new state of chosen block with modified property
-            BlockState newState = cycle(state, property, false);
+            BlockState newState = cycle(state, property, player.shouldCancelInteraction());
             // update chosen block with its new state
             world.setBlockState(pos, newState, 18);
             // send the player a message of successful modifying
@@ -102,7 +102,7 @@ public class DebugStickMixin extends Item {
             );
         } else {
             // select next property
-            property = getNextProperty(collection, property, block);
+            property = getNextProperty(collection, property, block, player.shouldCancelInteraction());
             // check if given property is allowed
             if (!isPropertyModifiable(property, block)) {
                 sendMessage(player, Text.translatable(this.getTranslationKey() + ".empty", new Object[]{registryEntry.getIdAsString()}));
@@ -128,10 +128,10 @@ public class DebugStickMixin extends Item {
      * Choose next property that is appropriate for the configuration file
      * */
     @Unique
-    private Property<?> getNextProperty(Collection<Property<?>> collection, @Nullable Property<?> property, @Nullable Block block) {
+    private Property<?> getNextProperty(Collection<Property<?>> collection, @Nullable Property<?> property, @Nullable Block block, boolean inverse) {
         int i = 0;
         do { // simply scrolling through the list of properties until suitable is found
-            property = cycle(collection, property, false);
+            property = cycle(collection, property, inverse);
             i++;
         } while (i < collection.size() && !isPropertyModifiable(property, block));
         return property;
