@@ -18,6 +18,7 @@ import net.minecraft.world.WorldAccess;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -80,6 +81,12 @@ public class DebugStickMixin extends Item {
             if (property == null) {
                 property = getNextProperty(collection, null, block);
             }
+            // check if given property is allowed
+            if (!isPropertyModifiable(property, block)) {
+                sendMessage(player, Text.translatable(this.getTranslationKey() + ".empty", new Object[]{registryEntry.getIdAsString()}));
+                cir.setReturnValue(false);
+                return;
+            }
 
             // generate new state of chosen block with modified property
             BlockState newState = cycle(state, property, false);
@@ -96,6 +103,12 @@ public class DebugStickMixin extends Item {
         } else {
             // select next property
             property = getNextProperty(collection, property, block);
+            // check if given property is allowed
+            if (!isPropertyModifiable(property, block)) {
+                sendMessage(player, Text.translatable(this.getTranslationKey() + ".empty", new Object[]{registryEntry.getIdAsString()}));
+                cir.setReturnValue(false);
+                return;
+            }
             // save chosen property in the NBT data of Debug Stick
             stack.set(DataComponentTypes.DEBUG_STICK_STATE, stateComponent.with(registryEntry, property));
 
@@ -114,6 +127,7 @@ public class DebugStickMixin extends Item {
     /**
      * Choose next property that is appropriate for the configuration file
      * */
+    @Unique
     private Property<?> getNextProperty(Collection<Property<?>> collection, @Nullable Property<?> property, @Nullable Block block) {
         int i = 0;
         do { // simply scrolling through the list of properties until suitable is found
@@ -126,6 +140,7 @@ public class DebugStickMixin extends Item {
     /**
      * Check via config if chosen block is able to be modified in survival
      * */
+    @Unique
     private boolean isBlockAllowedToModify(Block block) {
         return Config.isBlockAllowed(block);
     }
@@ -133,6 +148,7 @@ public class DebugStickMixin extends Item {
     /**
      * Check via config if chosen property is able to be modified in survival
      * */
+    @Unique
     private boolean isPropertyModifiable(Property<?> property, @Nullable Block block) {
         return Config.isPropertyAllowed(property.getName(), block);
     }
