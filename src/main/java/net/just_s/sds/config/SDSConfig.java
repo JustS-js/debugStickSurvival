@@ -23,7 +23,7 @@ public record SDSConfig (
         this(
                 new Rules(
                         List.of(
-                                new Entry("iron_bars", Map.of()),
+                                new Entry("iron_bars"),
                                 new Entry("bamboo", Map.of(
                                                 "leaves", List.of("none", "large"),
                                                 "age", List.of("all")
@@ -32,10 +32,10 @@ public record SDSConfig (
                         ),
                         Map.of(),
                         List.of(
-                                new Entry("stairs", Map.of()),
-                                new Entry("walls", Map.of()),
-                                new Entry("c:glass_panes", Map.of()),
-                                new Entry("fences", Map.of()),
+                                new Entry("stairs"),
+                                new Entry("walls"),
+                                new Entry("c:glass_panes"),
+                                new Entry("fences"),
                                 new Entry("slabs", Map.of(
                                                 "type", List.of("top", "bottom")
                                         )
@@ -108,9 +108,13 @@ public record SDSConfig (
         static Codec<Entry> CODEC = RecordCodecBuilder.create(
                 instance -> instance.group(
                         Codec.STRING.fieldOf("id").forGetter(Entry::id),
-                        Codec.unboundedMap(Codec.STRING, Codec.list(Codec.STRING)).fieldOf("properties").forGetter(Entry::properties)
+                        Codec.unboundedMap(Codec.STRING, Codec.list(Codec.STRING)).optionalFieldOf("properties", Map.of()).forGetter(Entry::properties)
                 ).apply(instance, Entry::new)
         );
+
+        public Entry(String id) {
+            this(id, Map.of());
+        }
 
         public boolean isEmpty() {
             return properties == null || properties.isEmpty();

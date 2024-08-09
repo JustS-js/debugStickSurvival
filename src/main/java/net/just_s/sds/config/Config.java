@@ -1,5 +1,6 @@
 package net.just_s.sds.config;
 
+import com.google.gson.stream.JsonWriter;
 import com.mojang.serialization.JsonOps;
 import net.just_s.sds.SDSMod;
 import net.minecraft.block.Block;
@@ -41,7 +42,9 @@ public class Config {
     public static void save() {
         JsonElement json = serialize();
         try (FileWriter w = new FileWriter(configFile)) {
-            GSON.toJson(json, w);
+            final JsonWriter jw = GSON.newJsonWriter(w);
+            jw.setIndent("\t");
+            GSON.toJson(json, jw);
             SDSMod.LOGGER.info("Saved new config file.");
         } catch (IOException e) {SDSMod.LOGGER.error("Error while saving:" + e.getMessage());}
     }
