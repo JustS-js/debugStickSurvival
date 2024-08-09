@@ -24,7 +24,7 @@ public class SDSMod implements ModInitializer {
 		AttackBlockCallback.EVENT.register(
 				(player, world, hand, pos, direction) -> {
 					// callback hooks before the spectator check
-					if (player.isSpectator()) {
+					if (player.isSpectator() || player.isCreative()) {
 						return ActionResult.PASS;
 					}
 
