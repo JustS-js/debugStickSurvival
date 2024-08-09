@@ -4,7 +4,8 @@
   "package": "net.just_s.sds.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "DebugStickMixin"
+    "DebugStickMixin",
+    "ReloadCommandMixin"
   ],
   "injectors": {
     "defaultRequire": 1

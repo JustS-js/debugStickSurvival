@@ -2,6 +2,7 @@ package net.just_s.sds;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
+import net.just_s.sds.config.Config;
 import net.minecraft.component.ComponentChanges;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
@@ -18,7 +19,7 @@ public class SDSMod implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		Config.load();
+		Config.loadOrCreate();
 		LOGGER.info("SDS initialized successfully!");
 		AttackBlockCallback.EVENT.register(
 				(player, world, hand, pos, direction) -> {

@@ -1,6 +1,6 @@
 package net.just_s.sds.mixin;
 
-import net.just_s.sds.Config;
+import net.just_s.sds.config.Config;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.component.DataComponentTypes;
