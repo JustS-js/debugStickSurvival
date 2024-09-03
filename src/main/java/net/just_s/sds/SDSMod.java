@@ -3,9 +3,6 @@ package net.just_s.sds;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.just_s.sds.config.Config;
-import net.minecraft.component.ComponentChanges;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
@@ -46,22 +43,13 @@ public class SDSMod implements ModInitializer {
 
 					// So I decided to put custom nbt timer to prevent spamming
 					// (It is still buggy, suggestions appreciated)
-					NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
-					if (component != null) {
-						NbtCompound nbtData = component.copyNbt();
-						long lastModified = nbtData.getLong("LastModified");
-						if (world.getTime() < lastModified + 5) {
-							return ActionResult.PASS;
-						}
+					NbtCompound nbtData = stack.getOrCreateNbt();
+					long lastModified = nbtData.getLong("LastModified");
+					if (world.getTime() < lastModified + 5) {
+						return ActionResult.PASS;
 					}
 
-					NbtCompound newNbtData = new NbtCompound();
-					newNbtData.put("LastModified", NbtLong.of(world.getTime()));
-					stack.applyChanges(
-							ComponentChanges.builder()
-									.add(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(newNbtData))
-									.build()
-					);
+					nbtData.put("LastModified", NbtLong.of(world.getTime()));
 					stack.getItem().canMine(world.getBlockState(pos), world, pos, player);
 					return ActionResult.PASS;
 				}

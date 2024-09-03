@@ -3,13 +3,12 @@ package net.just_s.sds.mixin;
 import net.just_s.sds.config.Config;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.DebugStickStateComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.DebugStickItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.text.Text;
@@ -53,28 +52,27 @@ public abstract class DebugStickMixin extends Item {
         if (player.isCreativeLevelTwoOp()) {return;}
 
         Block block = state.getBlock();
-        RegistryEntry<Block> registryEntry = state.getRegistryEntry();
-        StateManager<Block, BlockState> stateManager = (registryEntry.value()).getStateManager();
+        String blockIdAsString = Registries.BLOCK.getId(block).toString();
+        StateManager<Block, BlockState> stateManager = block.getStateManager();
         Collection<Property<?>> collection = stateManager.getProperties();
 
         // check if block is modifiable by the config
         if (!isBlockAllowedToModify(block) || collection.isEmpty()) {
-            sendMessage(player, Text.translatable(this.getTranslationKey() + ".empty", new Object[]{registryEntry.getIdAsString()}));
+            sendMessage(player, Text.translatable(this.getTranslationKey() + ".empty", new Object[]{blockIdAsString}));
             cir.setReturnValue(false);
             return;
         }
 
-        // https://minecraft.wiki/w/Debug_Stick
+        // https://minecraft.fandom.com/wiki/Debug_Stick#Item_data
         // to remember the data of which property for which block is chosen,
-        // Minecraft Devs decided to use Component for Debug Stick.
-        // Who am I to disagree? (btw thx to @MrBretze for example code)
-        DebugStickStateComponent stateComponent = stack.get(DataComponentTypes.DEBUG_STICK_STATE);
+        // Minecraft Devs decided to use NBT data for Debug Stick.
+        // Who am I to disagree?
+        NbtCompound nbtCompound = stack.getOrCreateSubNbt("DebugProperty");
 
-        if (stateComponent == null) {
-            return;
-        }
+        String blockName = Registries.BLOCK.getId(block).toString();
+        String propertyName = nbtCompound.getString(blockName);
 
-        Property<?> property = stateComponent.properties().get(registryEntry);
+        Property<?> property = stateManager.getProperty(propertyName);
 
         if (update) {
             // change value of property
@@ -83,7 +81,7 @@ public abstract class DebugStickMixin extends Item {
             }
             // check if given property is allowed
             if (!isPropertyModifiable(property, block)) {
-                sendMessage(player, Text.translatable(this.getTranslationKey() + ".empty", new Object[]{registryEntry.getIdAsString()}));
+                sendMessage(player, Text.translatable(this.getTranslationKey() + ".empty", new Object[]{blockIdAsString}));
                 cir.setReturnValue(false);
                 return;
             }
@@ -105,12 +103,12 @@ public abstract class DebugStickMixin extends Item {
             property = getNextProperty(collection, property, block, player.shouldCancelInteraction());
             // check if given property is allowed
             if (!isPropertyModifiable(property, block)) {
-                sendMessage(player, Text.translatable(this.getTranslationKey() + ".empty", new Object[]{registryEntry.getIdAsString()}));
+                sendMessage(player, Text.translatable(this.getTranslationKey() + ".empty", new Object[]{blockIdAsString}));
                 cir.setReturnValue(false);
                 return;
             }
             // save chosen property in the NBT data of Debug Stick
-            stack.set(DataComponentTypes.DEBUG_STICK_STATE, stateComponent.with(registryEntry, property));
+            nbtCompound.putString(blockName, property.getName());
 
             // send the player a message of successful selecting
             sendMessage(

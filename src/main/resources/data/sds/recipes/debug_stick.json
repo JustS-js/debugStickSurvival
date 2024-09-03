@@ -5,7 +5,7 @@
     {"item": "minecraft:chorus_fruit"}
   ],
   "result": {
-    "id": "minecraft:debug_stick",
+    "item": "minecraft:debug_stick",
     "count": 1
   }
 }

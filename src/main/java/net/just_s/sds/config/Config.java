@@ -32,11 +32,11 @@ public class Config {
     protected static JsonElement serialize() {
         return SDSConfig.CODEC
                 .encode(getData(), JsonOps.INSTANCE, JsonOps.INSTANCE.empty())
-                .getOrThrow();
+                .getOrThrow(false, JsonParseException::new);
     }
 
     protected static void deserialize(JsonElement element) {
-        sdsConfig = SDSConfig.CODEC.decode(JsonOps.INSTANCE, element).getOrThrow().getFirst();
+        sdsConfig = SDSConfig.CODEC.decode(JsonOps.INSTANCE, element).getOrThrow(false, JsonParseException::new).getFirst();
     }
 
     public static void save() {
