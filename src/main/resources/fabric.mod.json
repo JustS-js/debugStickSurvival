@@ -18,6 +18,9 @@
 
   "environment": "*",
   "entrypoints": {
+    "fabric-datagen": [
+      "net.just_s.sds.datagen.SDSDataGenerator"
+    ],
     "main": [
       "net.just_s.sds.SDSMod"
     ]
@@ -29,7 +32,7 @@
   "depends": {
     "fabricloader": ">=0.15.10",
     "fabric": "*",
-    "minecraft": ">=1.20.5",
+    "minecraft": ">=1.21.2",
     "java": ">=21"
   },
   "suggests": {
