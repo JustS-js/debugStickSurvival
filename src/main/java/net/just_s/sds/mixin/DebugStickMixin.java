@@ -79,7 +79,7 @@ public abstract class DebugStickMixin extends Item {
         if (update) {
             // change value of property
             if (property == null) {
-                property = getNextProperty(collection, null, block, player.shouldCancelInteraction());
+                property = getNextProperty(collection, null, block, false);
             }
             // check if given property is allowed
             if (!isPropertyModifiable(property, block)) {
