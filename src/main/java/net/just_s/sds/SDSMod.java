@@ -49,7 +49,7 @@ public class SDSMod implements ModInitializer {
 					NbtComponent component = stack.get(DataComponentTypes.CUSTOM_DATA);
 					if (component != null) {
 						NbtCompound nbtData = component.copyNbt();
-						long lastModified = nbtData.getLong("LastModified");
+						long lastModified = nbtData.getLong("LastModified").orElse(0L);
 						if (world.getTime() < lastModified + 5) {
 							return ActionResult.PASS;
 						}
@@ -62,7 +62,7 @@ public class SDSMod implements ModInitializer {
 									.add(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(newNbtData))
 									.build()
 					);
-					stack.getItem().canMine(world.getBlockState(pos), world, pos, player);
+					stack.getItem().canMine(stack, world.getBlockState(pos), world, pos, player);
 					return ActionResult.PASS;
 				}
 		);
