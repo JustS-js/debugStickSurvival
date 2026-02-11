@@ -25,7 +25,7 @@ public class SDSRecipeGenerator extends FabricRecipeProvider {
             public void generate() {
                 createShapeless(RecipeCategory.TOOLS, Items.DEBUG_STICK)
                         .input(Items.STICK).criterion(hasItem(Items.STICK), conditionsFromItem(Items.STICK))
-                        .input(Items.CHORUS_FRUIT).criterion(hasItem(Items.CHORUS_FRUIT), conditionsFromItem(Items.CHORUS_FRUIT))
+                        .input(Items.DIAMOND_BLOCK).criterion(hasItem(Items.DIAMOND_BLOCK), conditionsFromItem(Items.DIAMOND_BLOCK))
                         .offerTo(recipeExporter, RegistryKey.of(
                                 RegistryKeys.RECIPE,
                                 Identifier.of("sds", getRecipeName(Items.DEBUG_STICK))
