@@ -21,9 +21,8 @@ public class SDSRecipeGenerator extends FabricRecipeProvider {
 
     @Override
     public @NonNull String getName() {
-        return "";
+        return "SDS Custom Recipes";
     }
-
 
     @Override
     protected @NonNull RecipeProvider createRecipeProvider(HolderLookup.@NonNull Provider registries, @NonNull RecipeOutput output) {
