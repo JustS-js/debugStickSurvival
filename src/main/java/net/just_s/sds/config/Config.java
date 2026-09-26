@@ -66,7 +66,6 @@ public class Config {
             deserialize(JsonParser.parseReader(f));
         } catch (Exception e) {
             SDSMod.LOGGER.warn("Exception occurred while reading config. ", e);
-            save();
         }
     }
 
